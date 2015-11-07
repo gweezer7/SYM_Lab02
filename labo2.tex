@@ -1,0 +1,66 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage[margin=1in]{geometry}
+\title{Labo 2 - Protocoles applicatifs}
+\date{05-11-2015}
+\author{Eléonore d'Agostino et Karim Ghozlani}
+
+\lstset{
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+\begin{document}
+  \pagenumbering{gobble}
+  \maketitle
+  \newpage
+  \pagenumbering{arabic}
+
+  \begin{enumerate}
+    \item \textbf{Si une authentification par le serveur est requise, peut-on utiliser un protocole asynchrone? Quelles seraient les resctrictions? Peut-on utiliser une transmission différée?}
+
+      Oui. Par exemple, avec la classe HttpURLConnection d'Android, on peut utiliser un objet Authenticator pour définir un nom d'utilisateur et un mot de passe lors des connections HTTP. Par contre, si on n'utilise pas HTTPS, toutes ces valeurs sont envoyées au serveur sans encryption et la connexion n'est donc pas du tout sécurisée.
+      
+      
+
+    \item \textbf{Lors de l'utilisation de protocoles asynchrones, c'est généralement deux threads différents qui se préoccupent de l'envoi et de la réception. Quels problèmes cela peut-il poser?}
+      
+      Ceci peut poser des problèmes de concurrence. Par exemple, si on a des ressources partagées entre les deux threads, on peut se retrouver avec des valeurs aberrantes si on tente de modifier une des ressources avec les deux threads en même temps.
+
+    \item \textbf{Lorsque l'on implémente l'écriture différée, il arrive que l'on aie soudain plusieurs transmissions en attente qui deviennent possibles simultanément. Comment implémenter proprement cette situation:}
+      
+      \begin{enumerate}
+        \item \textbf{Effectuer une connexion par transmission différée}
+        
+        -
+    
+        \item \textbf{Multiplexer toutes les connexions vers un même serveur en une seule connexion de transport. Dans ce dernier cas, comment implémenter le protocole applicatif, quels avantages peut-on espérer de ce multiplexage, et surtout, comment doit-on planifier les réponses du serveur lorsque ces dernières s'avèrent nécessaires?}
+    
+        -
+    
+        \item \textbf{Comparer les deux techniques et discuter des avatages et inconvénients respectifs}
+    
+        -
+      \end{enumerate}
+
+    \item \textbf{Quel inconvénient y a-t-il à utiliser une infrastructure comme JSON n'offrant aucun service de validation par rapport à une infrastructure comme SOAP ou XML-RPC offrant ces possibilités? Y a-t-il en revanche des avantages que vous pouvez citer?}
+      
+      Vu qu'il n'a pas de service de validation, on ne peut pas vérifier que le contenu ou la structure du JSON est correct avant que le serveur l'ai reçu et tente d'en utiliser le contenu, et donc on ne peut pas prédire comment le serveur réagira. Alors qu'une infrastructure ayant un service de validation pourra tenter de valider le message reçu, et s'il n'est pas valide, pourra agir en conséquence.
+      
+      Par contre, JSON a l'avantage d'être plus lèger à envoyer.
+
+    \item \textbf{Quel gain peut-on espérer en moyenne sur des fichiers texte en utilisant de la compression?}
+      
+      -
+
+  \end{enumerate}
+
+\end{document}

@@ -1,16 +1,40 @@
 package com.example.karimghozlani.sym_lab2;
 
 import android.app.Activity;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.MainActivity);
+        setContentView(R.layout.activity_main);
+
+        ConnectivityManager conn = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = conn.getActiveNetworkInfo();
+
+        if (netInfo != null && netInfo.isConnected()) {
+            Toast.makeText(this, "Connected!", Toast.LENGTH_SHORT).show();
+
+            AsyncSendRequest asr = new AsyncSendRequest();
+            asr.addCommunicationListener(new CommunicationEventListener() {
+                public boolean handleServerResponse(String response) {
+                    //Toast.makeText(getApplicationContext(), response, Toast.LENGTH_LONG).show();
+                    return true;
+                }
+            });
+
+            asr.sendRequest("POST test", "http://moap.iict.ch:8080/Moap/Basic");
+        } else {
+            Toast.makeText(this, "Connection failed", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
