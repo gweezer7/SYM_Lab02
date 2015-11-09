@@ -4,7 +4,10 @@ import java.io.Serializable;
 import java.util.Random;
 
 /**
- * Created by karimghozlani on 08.11.15.
+ * Serializable object to represent the state of a hotel room
+ *
+ * @author Karim Ghozlani
+ * @author Eleonore d'Agostino
  */
 public class RoomState implements Serializable {
     private int number;

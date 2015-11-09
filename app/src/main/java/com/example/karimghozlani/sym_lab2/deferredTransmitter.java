@@ -1,34 +1,74 @@
 package com.example.karimghozlani.sym_lab2;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Pair;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by karimghozlani on 09.11.15.
+ * Class to handle sending deferred requests
+ *
+ * @author Karim Ghozlani
+ * @author Eleonore d'Agostino
  */
-public class deferredTransmitter {
-    private List<Pair<String, String>> failedRequests = new LinkedList<>();
+public class DeferredTransmitter {
+    private List<Pair<String, String>> failedRequests = new ArrayList<>();
     private boolean isResentScheduled = false;
+    private AsyncSendRequest asr;
+    private Context context;
 
-    public void scheduleResent(Pair<String, String> request) {
+    private Thread thread = new Thread() {
+        public void run() {
+            while (isResentScheduled) {
+                if (isConnected()) {
+                    sendQueuedMessage();
+                } else {
+                    try {
+                        thread.wait(10000);
+                    } catch (Exception e) {
+                        thread.interrupt();
+                    }
+                }
+            }
+        }
+    };
+
+    public DeferredTransmitter(AsyncSendRequest asr, Context context) {
+        this.asr = asr;
+        this.context = context;
+
+        asr.setDeferredTransmitter(this);
+    }
+
+    private boolean isConnected() {
+        ConnectivityManager conn = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = conn.getActiveNetworkInfo();
+
+        return (netInfo != null && netInfo.isConnected());
+    }
+
+    public void queueRequest(Pair<String, String> request) {
         failedRequests.add(request);
+
         if (!isResentScheduled) {
             isResentScheduled = true;
-            // todo thread task to check connectivity and trigger retry if connectivity found
+            thread.start();
         }
     }
 
-    public void sendQueuedMessages() {
-        for (Pair<String, String> failedRequest : failedRequests) {
-            AsyncSendRequest asr = new AsyncSendRequest();
-            // todo find a way to pass the text area
-            asr.addCommunicationListener(new CommunicationEventListener(null));
-            asr.sendRequest(failedRequest.first, failedRequest.second);
+    public void sendQueuedMessage() {
+        Pair<String, String> request = failedRequests.remove(0);
+        asr.sendRequest(request.first, request.second);
+
+        if (failedRequests.isEmpty()) {
+            isResentScheduled = false;
+            try {
+                thread.join();
+            } catch (Exception e) {}
         }
-        isResentScheduled = false;
-        // todo stop the thread
     }
 
 }

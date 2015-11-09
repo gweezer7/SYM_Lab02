@@ -5,7 +5,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.util.Base64;
+import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -15,19 +15,17 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.zip.GZIPOutputStream;
-
 /**
- * Created by karimghozlani on 08.11.15.
+ * Main activity
+ *
+ * @author Karim Ghozlani
+ * @author Eleonore d'Agostino
  */
 public class RoomStateHandler extends Activity {
     private TextView textArea;
+    private DeferredTransmitter transmitter;
+    private AsyncSendRequest asr;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,6 +39,10 @@ public class RoomStateHandler extends Activity {
                 sendRoomState();
             }
         });
+
+        asr = new AsyncSendRequest();
+        asr.addCommunicationListener(new CommunicationEventListener(textArea));
+        transmitter = new DeferredTransmitter(asr, this);
     }
 
     @Override
@@ -70,21 +72,18 @@ public class RoomStateHandler extends Activity {
         ConnectivityManager conn = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = conn.getActiveNetworkInfo();
 
+        // generate room state
+        RoomState roomState = RoomState.generateRoomState();
+
+        // serialize it
+        String serializedRoomState = new Gson().toJson(roomState);
+
         if (netInfo != null && netInfo.isConnected()) {
-            // generate room state
-            RoomState roomState = RoomState.generateRoomState();
-
-            // serialize it
-            String serializedRoomState = new Gson().toJson(roomState);
-
-
             // send room state to server
-            AsyncSendRequest asr = new AsyncSendRequest();
-            asr.addCommunicationListener(new CommunicationEventListener(textArea));
             asr.sendRequest(serializedRoomState, "http://moap.iict.ch:8080/Moap/Basic");
         } else {
             Toast.makeText(this, "Connection failed", Toast.LENGTH_SHORT).show();
-            // todo add failed request to deferred transmitter stack
+            transmitter.queueRequest(Pair.create(serializedRoomState, "http://moap.iict.ch:8080/Moap/Basic"));
         }
 
     }

@@ -1,10 +1,12 @@
 package com.example.karimghozlani.sym_lab2;
 
 /**
- * Created by karimghozlani on 05.11.15.
+ * Interface for the asynchronous HTTP request sending
+ *
+ * @author Karim Ghozlani
+ * @author Eleonore d'Agostino
  */
 public interface IAsyncSendRequest {
-
-    public void sendRequest(String request, String link);
-    public void addCommunicationListener(CommunicationEventListener listener);
+    void sendRequest(String request, String link);
+    void addCommunicationListener(CommunicationEventListener listener);
 }

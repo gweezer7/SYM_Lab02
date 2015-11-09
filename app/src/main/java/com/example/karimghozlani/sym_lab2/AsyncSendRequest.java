@@ -1,11 +1,9 @@
 package com.example.karimghozlani.sym_lab2;
 
-import android.os.AsyncTask;
 import android.util.Base64;
 import android.util.Log;
-import android.widget.Toast;
+import android.util.Pair;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -15,8 +13,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -25,10 +21,15 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * Created by karimghozlani on 05.11.15.
+ * Implementation of asynchronous HTTP request sending.
+ * Includes compression with Base64 encoding.
+ *
+ * @author Karim Ghozlani
+ * @author Eleonore d'Agostino
  */
 public class AsyncSendRequest implements IAsyncSendRequest {
     List<CommunicationEventListener> listeners = new ArrayList<>();
+    DeferredTransmitter transmitter;
 
     @Override
     public void sendRequest(final String request, final String link) {
@@ -98,7 +99,6 @@ public class AsyncSendRequest implements IAsyncSendRequest {
                         return;
                     }
 
-
                     // forward response to listeners
                     for (CommunicationEventListener l: listeners) {
                         Log.d("AsyncSendRequest", "Called listener: " + l);
@@ -106,9 +106,7 @@ public class AsyncSendRequest implements IAsyncSendRequest {
                     }
                 } catch (Exception e) {
                     Log.d("AsyncSendRequest", "An exception occurred: " + e);
-                    // todo schedule retry
-
-
+                    transmitter.queueRequest(Pair.create(request, link));
                 }
             }
 
@@ -129,5 +127,9 @@ public class AsyncSendRequest implements IAsyncSendRequest {
     @Override
     public void addCommunicationListener(CommunicationEventListener listener) {
         if (!listeners.contains(listener)) listeners.add(listener);
+    }
+
+    public void setDeferredTransmitter(DeferredTransmitter dt) {
+        transmitter = dt;
     }
 }

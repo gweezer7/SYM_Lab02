@@ -6,7 +6,10 @@ import android.widget.TextView;
 import com.google.gson.Gson;
 
 /**
- * Created by karimghozlani on 05.11.15.
+ * Implementation of the CommunicationEventListener object
+ *
+ * @author Karim Ghozlani
+ * @author Eleonore d'Agostino
  */
 public class CommunicationEventListener extends Activity implements ICommunicationEventListener {
 
