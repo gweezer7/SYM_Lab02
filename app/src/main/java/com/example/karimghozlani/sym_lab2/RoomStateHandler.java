@@ -16,7 +16,7 @@ import android.widget.Toast;
 import com.google.gson.Gson;
 
 /**
- * Main activity
+ * Main activity; contains a button to send an HTTP POST request to http://moap.iict.ch:8080/Moap/Basic
  *
  * @author Karim Ghozlani
  * @author Eleonore d'Agostino
@@ -67,22 +67,24 @@ public class RoomStateHandler extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * If we have connectivity, attempts to send an AsyncSendRequest containing a random room state
+     * to the server.
+     * If we don't, queues a request containing that same information.
+     */
     public void sendRoomState() {
         // check that we have connectivity on device
         ConnectivityManager conn = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = conn.getActiveNetworkInfo();
 
-        // generate room state
+        // generate and serialize room state
         RoomState roomState = RoomState.generateRoomState();
-
-        // serialize it
         String serializedRoomState = new Gson().toJson(roomState);
 
         if (netInfo != null && netInfo.isConnected()) {
-            // send room state to server
             asr.sendRequest(serializedRoomState, "http://moap.iict.ch:8080/Moap/Basic");
         } else {
-            Toast.makeText(this, "Connection failed", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Connection failed; Request was queued", Toast.LENGTH_SHORT).show();
             transmitter.queueRequest(Pair.create(serializedRoomState, "http://moap.iict.ch:8080/Moap/Basic"));
         }
 

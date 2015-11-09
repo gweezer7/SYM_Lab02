@@ -7,5 +7,5 @@ package com.example.karimghozlani.sym_lab2;
  * @author Eleonore d'Agostino
  */
 public interface ICommunicationEventListener {
-    public boolean handleServerResponse(String response);
+    boolean handleServerResponse(String response);
 }

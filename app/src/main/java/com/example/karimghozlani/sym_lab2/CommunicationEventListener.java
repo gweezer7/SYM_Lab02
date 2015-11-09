@@ -12,13 +12,15 @@ import com.google.gson.Gson;
  * @author Eleonore d'Agostino
  */
 public class CommunicationEventListener extends Activity implements ICommunicationEventListener {
-
     TextView textArea;
 
     public CommunicationEventListener(TextView textArea) {
         this.textArea = textArea;
     }
 
+    /**
+     * Given the server response, displays it on the main window
+     */
     @Override
     public boolean handleServerResponse(final String response) {
         final RoomState roomState = new Gson().fromJson(response, RoomState.class);

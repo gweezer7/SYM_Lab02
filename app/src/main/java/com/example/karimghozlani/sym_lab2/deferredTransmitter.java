@@ -20,6 +20,10 @@ public class DeferredTransmitter {
     private AsyncSendRequest asr;
     private Context context;
 
+    /**
+     * Main thread: sends messages if we have connection, waits 10s otherwise and tries again,
+     * until we don't have any more requests scheduled.
+     */
     private Thread thread = new Thread() {
         public void run() {
             while (isResentScheduled) {
@@ -36,6 +40,12 @@ public class DeferredTransmitter {
         }
     };
 
+    /**
+     * Creates a new transmitter, assigns it an AsyncSendRequest, and tells said ASR to use this
+     * transmitter when it runs into connectivity issues.
+     * @param asr the AsyncSendRequest to use to send our requests
+     * @param context the Activity context to use to check for connectivity
+     */
     public DeferredTransmitter(AsyncSendRequest asr, Context context) {
         this.asr = asr;
         this.context = context;
@@ -43,6 +53,10 @@ public class DeferredTransmitter {
         asr.setDeferredTransmitter(this);
     }
 
+    /**
+     * Checks whether network connectivity is available for our given context
+     * @return true if we're connected, false otherwise
+     */
     private boolean isConnected() {
         ConnectivityManager conn = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = conn.getActiveNetworkInfo();
@@ -50,6 +64,11 @@ public class DeferredTransmitter {
         return (netInfo != null && netInfo.isConnected());
     }
 
+    /**
+     * Adds a request to our queue. If we didn't already have queued requests, we start the main
+     * thread to send them.
+     * @param request Pair composed of an HTTP request and a link to send it to
+     */
     public void queueRequest(Pair<String, String> request) {
         failedRequests.add(request);
 
@@ -59,6 +78,10 @@ public class DeferredTransmitter {
         }
     }
 
+    /**
+     * Removes the oldest message in our request queue and attempts to send it. If our queue is empty,
+     * we stop the main thread.
+     */
     public void sendQueuedMessage() {
         Pair<String, String> request = failedRequests.remove(0);
         asr.sendRequest(request.first, request.second);

@@ -31,6 +31,16 @@ public class AsyncSendRequest implements IAsyncSendRequest {
     List<CommunicationEventListener> listeners = new ArrayList<>();
     DeferredTransmitter transmitter;
 
+    /**
+     * Sends an HTTP POST message to the given link, containing the given request.
+     * It is compressed using GZIP, and encoded with Base64.
+     * Once the response has been obtained, its contents are sent to all the currently subscribed
+     * listeners.
+     * If the request fails to send, we send it to the DeferredTransmitter to attempt sending again
+     * later.
+     * @param request content of the HTTP POST message
+     * @param link link to send the request to
+     */
     @Override
     public void sendRequest(final String request, final String link) {
         Log.d("AsyncSendRequest", "sendRequest method called");
@@ -38,6 +48,7 @@ public class AsyncSendRequest implements IAsyncSendRequest {
         Thread thread = new Thread(){
             public void run() {
                 try {
+                    // get our HTTP connection set up
                     URL url = new URL(link);
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setReadTimeout(10000);
@@ -54,10 +65,11 @@ public class AsyncSendRequest implements IAsyncSendRequest {
                         gzos.close();
                         compressedRequest = Base64.encodeToString(os.toByteArray(), Base64.DEFAULT);
                     } catch (IOException e) {
-                        Log.d("AsyncSendRequest", "An exception occurred: " + e);
+                        Log.d("AsyncSendRequest", "An exception occurred while compressing and/or encoding: " + e);
                         return;
                     }
 
+                    // write request to our connection stream
                     OutputStream out = conn.getOutputStream();
                     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
                     writer.write(compressedRequest);
@@ -68,19 +80,16 @@ public class AsyncSendRequest implements IAsyncSendRequest {
                     // send
                     conn.connect();
 
-                    // response received
+                    // receive response
                     InputStream is = conn.getInputStream();
                     Log.d("AsyncSendRequest", "Connection code was " + conn.getResponseCode());
 
                     // Convert the InputStream into a string
                     String contentAsString = readIt(is);
-
                     String encodedRoomState = contentAsString.substring(
                             contentAsString.length() - compressedRequest.length() + 2, contentAsString.length());
 
-
-                    // decode Base64
-                    // unzip
+                    // decode Base64 and unzip
                     StringBuilder sb = new StringBuilder();
                     try {
                         byte[] base64DecodedResponse = Base64.decode(encodedRoomState, Base64.DEFAULT);
@@ -95,7 +104,7 @@ public class AsyncSendRequest implements IAsyncSendRequest {
                         }
                         gzis.close();
                     } catch (IOException e) {
-                        Log.d("AsyncSendRequest", "An exception occurred: " + e);
+                        Log.d("AsyncSendRequest", "An exception occurred while decoding and/or unzipping: " + e);
                         return;
                     }
 
@@ -105,11 +114,12 @@ public class AsyncSendRequest implements IAsyncSendRequest {
                         l.handleServerResponse(sb.toString());
                     }
                 } catch (Exception e) {
-                    Log.d("AsyncSendRequest", "An exception occurred: " + e);
+                    Log.d("AsyncSendRequest", "An exception occurred while attempting to send the request: " + e);
                     transmitter.queueRequest(Pair.create(request, link));
                 }
             }
 
+            // converts inputstream contents into a string
             public String readIt(InputStream stream) throws IOException {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
                 StringBuilder result = new StringBuilder();
