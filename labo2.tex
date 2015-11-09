@@ -56,6 +56,7 @@
 		
       \end{enumerate}
 
+  \newpage
     \item \textbf{Quel inconvénient y a-t-il à utiliser une infrastructure comme JSON n'offrant aucun service de validation par rapport à une infrastructure comme SOAP ou XML-RPC offrant ces possibilités? Y a-t-il en revanche des avantages que vous pouvez citer?}
       
       Vu qu'il n'a pas de service de validation, on ne peut pas vérifier que le contenu ou la structure du JSON est correct avant que le serveur l'ai reçu et tente d'en utiliser le contenu, et donc on ne peut pas prédire comment le serveur réagira. Alors qu'une infrastructure ayant un service de validation pourra tenter de valider le message reçu, et s'il n'est pas valide, pourra agir en conséquence.
