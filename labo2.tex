@@ -28,6 +28,8 @@
     \item \textbf{Si une authentification par le serveur est requise, peut-on utiliser un protocole asynchrone? Quelles seraient les restrictions? Peut-on utiliser une transmission différée?}
 
       Oui. Par exemple, avec la classe HttpURLConnection d'Android, on peut utiliser un objet Authenticator pour définir un nom d'utilisateur et un mot de passe lors des connections HTTP. Par contre, si on n'utilise pas HTTPS, toutes ces valeurs sont envoyées au serveur sans encryption et la connexion n'est donc pas du tout sécurisée.
+	  
+	  On peut aussi quand même utiliser une transmission différée, parce que l'objet HttpURLConnection permet de gérer les timeout, et donc d'implémenter un système de transmission différée dans le cas où notre requête ne peut pas être envoyée. Par contre il faudra donc vérifier que l'on soit toujours authentifié correctement côté client au moment où l'on veut envoyer les messages différés.
 
     \item \textbf{Lors de l'utilisation de protocoles asynchrones, c'est généralement deux threads différents qui se préoccupent de l'envoi et de la réception. Quels problèmes cela peut-il poser?}
       
@@ -36,15 +38,17 @@
 	  Ceci peut aussi poser problème dans le cas où on chercherai à avoir une association entre une requête et sa réponse.
 
     \item \textbf{Lorsque l'on implémente l'écriture différée, il arrive que l'on aie soudain plusieurs transmissions en attente qui deviennent possibles simultanément. Comment implémenter proprement cette situation:}
+	
+	  Dans les deux cas, à chaque fois qu'une requête échoue pour des raisons de connexion, on l'ajoute à une liste de requêtes échouées, qui sera utilisée pour savoir quelles requêtes retenter lorsqu'on aura de nouveau accès au réseau.
       
       \begin{enumerate}
         \item \textbf{Effectuer une connexion par transmission différée}
         
-        C'est ce que nous avons implémenté dans le labo: une fois que l'on a de nouveau accès à internet, on envoie toutes les transmissions en attente une par une, dans l'ordre dans lequel on avait tenté de les envoyer à la base.
+        C'est ce que nous avons implémenté dans le labo: une fois que l'on a de nouveau accès à internet, on envoie toutes les transmissions en attente une par une, dans l'ordre dans lequel on avait tenté de les envoyer à la base. La même fonction est appelée pour chaque requête en attente, tel un foreach.
     
         \item \textbf{Multiplexer toutes les connexions vers un même serveur en une seule connexion de transport. Dans ce dernier cas, comment implémenter le protocole applicatif, quels avantages peut-on espérer de ce multiplexage, et surtout, comment doit-on planifier les réponses du serveur lorsque ces dernières s'avèrent nécessaires?}
     
-        Dans ce cas, une fois que l'on a de nouveau accès à internet, on envoie une seule requête contenant toutes les requêtes précédentes. Ceci nécessite donc que le serveur soit en mesure de pouvoir accepter et lire une telle requête. Enfin, il faut aussi implémenter comment multiplexer les réponses du serveur en une seule réponse, et adapter le code de notre application en conséquence.
+        Dans ce cas, une fois que l'on a de nouveau accès à internet, on envoie une seule requête contenant toutes les requêtes précédentes. On aura donc une seule fonction appelée, qui enverra la liste de requêtes toujours sous forme de collection. Ceci nécessite donc que le serveur soit en mesure de pouvoir accepter et lire une telle requête. Enfin, il faut aussi implémenter comment multiplexer les réponses du serveur en une seule réponse, et adapter le code de notre application en conséquence.
     
         \item \textbf{Comparer les deux techniques et discuter des avantages et inconvénients respectifs}
     
@@ -62,7 +66,7 @@
       
       En moyenne, on peut espérer compresser du texte par un facteur d'environ 4. Vu que le codage Base64 augmente la quantité de bytes obtenus par $1/4 * 4/3 = 1/3$, on devrait finir avec un gain d'un facteur d'environ 3.
 	  
-	  Par contre, on ne peut compresser que le contenu d'une requête, et non les en-têtes et de protocoles, donc pour des messages très courts, on risque de perdre plus de temps à la compression que ce qu'on aurait gagné avec le temps de transmission réduit.
+	  Par contre, on ne peut compresser que le contenu d'une requête, et non les en-têtes des protocoles, donc pour des messages très courts, on risque de perdre plus de temps à la compression que ce qu'on aurait gagné avec le temps de transmission réduit.
 
   \end{enumerate}
 
